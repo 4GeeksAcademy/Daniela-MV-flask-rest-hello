@@ -1,5 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import String, Boolean
+from sqlalchemy import String, Boolean, Table, Column, Integer, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
 db = SQLAlchemy()
@@ -9,7 +9,21 @@ class User(db.Model):
     email: Mapped[str] = mapped_column(String(120), unique=True, nullable=False)
     password: Mapped[str] = mapped_column(nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean(), nullable=False)
+    
+    favorite_planets:Mapped[list["Planets"]]=relationship(
+        secondary=user_planet_favorite,
+        back_populates= "user_who_favorite"
+    )
 
+    favorite_characters:Mapped[list["Character"]]=relationship(
+        secondary=user_character_favorite,
+        back_populates= "user_who_favorite"
+    )
+
+    favorite_vehicles:Mapped[list["Vehicles"]]=relationship(
+        secondary=user_vehicle_favorite,
+        back_populates= "user_who_favorite"
+    )
 
     def serialize(self):
         return {
@@ -22,15 +36,15 @@ class Character(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(120), nullable=False)
     hair_color: Mapped[str] = mapped_column(nullable=False)
-    eyers_color: Mapped[str] = mapped_column(nullable=False)
-
+    eyes_color: Mapped[str] = mapped_column(nullable=False)
+    
 
     def serialize(self):
         return {
             "id": self.id,
             "name": self.name,
             "hair_color": self.hair_color,
-            "eyers_color": self.eyers_color,
+            "eyes_color": self.eyes_color,
         }
 
 class Planets(db.Model):
@@ -66,3 +80,24 @@ class Vehicles(db.Model):
             "cargo_capacity": self.cargo_capacity,
             "passengers": self.passengers,
         }
+
+user_planet_favorite= Table (
+    "user_planet_favorite",
+    db.Model.metadata,
+    Column("user_id", Integer, ForeignKey("user_id"), primary_key=True)
+    Column("planets_id", Integer, ForeignKey("planets_id"), primary_key=True)
+)
+
+user_character_favorite=Table(
+    "user_character_favorite",
+    db.Model.metadata,
+    Column("user_id", Integer, ForeignKey("user_id"), primary_key=True)
+    Column("character_id", Integer, ForeignKey("character_id"), primary_key=True)
+)
+
+user_vehicle_favorite=Table(
+    "user_vehicle_favorite",
+    db.Model.metadata,
+    Column("user_id", Integer, ForeignKey("user_id"), primary_key=True)
+    Column("vehicles_id", Integer, ForeignKey("vehicles_id"), primary_key=True)
+)
