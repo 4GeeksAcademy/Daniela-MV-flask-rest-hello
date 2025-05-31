@@ -1,8 +1,30 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import String, Boolean, Table, Column, Integer, ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column,relationship
 
 db = SQLAlchemy()
+
+user_planet_favorite=Table(
+    "user_planet_favorite",
+    db.Model.metadata,
+    Column('user_id', Integer, ForeignKey('user.id'), primary_key=True),
+    Column('planets_id', Integer, ForeignKey('planets.id'), primary_key=True)
+)
+
+user_character_favorite=Table(
+    "user_character_favorite",
+    db.Model.metadata,
+    Column('user_id', Integer, ForeignKey('user.id'), primary_key=True),
+    Column('character_id', Integer, ForeignKey('character.id'), primary_key=True)
+)
+
+user_vehicle_favorite=Table(
+    "user_vehicle_favorite",
+    db.Model.metadata,
+    Column('user_id', Integer, ForeignKey('user.id'), primary_key=True),
+    Column('vehicles_id', Integer, ForeignKey('vehicles.id'), primary_key=True)
+)
+
 
 class User(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -12,17 +34,17 @@ class User(db.Model):
     
     favorite_planets:Mapped[list["Planets"]]=relationship(
         secondary=user_planet_favorite,
-        back_populates= "user_who_favorite"
+        back_populates= "user_who_favorite_planet"
     )
 
     favorite_characters:Mapped[list["Character"]]=relationship(
         secondary=user_character_favorite,
-        back_populates= "user_who_favorite"
+        back_populates= "user_who_favorite_character"
     )
 
     favorite_vehicles:Mapped[list["Vehicles"]]=relationship(
         secondary=user_vehicle_favorite,
-        back_populates= "user_who_favorite"
+        back_populates= "user_who_favorite_vehicle"
     )
 
     def serialize(self):
@@ -38,6 +60,10 @@ class Character(db.Model):
     hair_color: Mapped[str] = mapped_column(nullable=False)
     eyes_color: Mapped[str] = mapped_column(nullable=False)
     
+    user_who_favorite_character:Mapped[list["User"]]=relationship(
+        secondary=user_character_favorite,
+        back_populates= "favorite_character" 
+    )
 
     def serialize(self):
         return {
@@ -53,7 +79,11 @@ class Planets(db.Model):
     population: Mapped[int] = mapped_column(nullable=False)
     climate: Mapped[str] = mapped_column(String(120), nullable=False)
     terrain: Mapped[str] = mapped_column(String(120), nullable=False)
-
+    
+    user_who_favorite_planet:Mapped[list["User"]]=relationship(
+        secondary=user_planet_favorite,
+        back_populates= "favorite_planets" 
+    )
 
     def serialize(self):
         return {
@@ -71,6 +101,10 @@ class Vehicles(db.Model):
     cargo_capacity: Mapped[int] = mapped_column(nullable=False)
     passengers: Mapped[int] = mapped_column(nullable=False)
 
+    user_who_favorite_vehicle:Mapped[list["User"]]=relationship(
+        secondary=user_vehicle_favorite,
+        back_populates= "favorite_vehicles" 
+    )
 
     def serialize(self):
         return {
@@ -81,23 +115,3 @@ class Vehicles(db.Model):
             "passengers": self.passengers,
         }
 
-user_planet_favorite= Table (
-    "user_planet_favorite",
-    db.Model.metadata,
-    Column("user_id", Integer, ForeignKey("user_id"), primary_key=True)
-    Column("planets_id", Integer, ForeignKey("planets_id"), primary_key=True)
-)
-
-user_character_favorite=Table(
-    "user_character_favorite",
-    db.Model.metadata,
-    Column("user_id", Integer, ForeignKey("user_id"), primary_key=True)
-    Column("character_id", Integer, ForeignKey("character_id"), primary_key=True)
-)
-
-user_vehicle_favorite=Table(
-    "user_vehicle_favorite",
-    db.Model.metadata,
-    Column("user_id", Integer, ForeignKey("user_id"), primary_key=True)
-    Column("vehicles_id", Integer, ForeignKey("vehicles_id"), primary_key=True)
-)
